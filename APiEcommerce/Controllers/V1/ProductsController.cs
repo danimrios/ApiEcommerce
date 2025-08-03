@@ -52,6 +52,32 @@ namespace APiEcommerce.Controllers
             var ProductDto = _mapper.Map<ProductDto>(Product);
             return Ok(ProductDto);
         }
+
+        [AllowAnonymous]
+        [HttpGet("Paged", Name = "GetProductsInPage")]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IActionResult GetProductsInPage([FromQuery]int pageNumber=1,[FromQuery]int pageSize=5)
+        {
+            if (pageNumber < 1 || pageSize < 1) return BadRequest("los parametros no pueden ser menores a 1");
+            var totalProduct = _productsRepository.GetTotalProducts();
+            var totalPages = (int)Math.Ceiling((double) totalProduct / pageSize);            
+
+            if (pageNumber > totalPages) return NotFound($"No se encontro la pagina");
+            var Product = _productsRepository.GetProductsInPages(pageNumber, pageSize);
+
+            var ProductDto = _mapper.Map<List<ProductDto>>(Product);
+            var paginationResponse = new PaginationResponse<ProductDto>
+            {
+                PageNumbre = pageNumber,
+                PageSize = pageSize,
+                TotalPages = totalPages,
+                Items = ProductDto
+            };
+            return Ok(paginationResponse);
+        }
         [HttpGet("searchByCategory/{CategoryId:int}", Name = "GetProductsForCategory")]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

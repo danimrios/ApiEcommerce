@@ -180,3 +180,4 @@ D:\Dotnet\APiEcommerce\APiEcommerce\bin\Debug\net8.0\Microsoft.AspNetCore.Crypto
 D:\Dotnet\APiEcommerce\APiEcommerce\bin\Debug\net8.0\Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll
 D:\Dotnet\APiEcommerce\APiEcommerce\bin\Debug\net8.0\Microsoft.Extensions.Identity.Core.dll
 D:\Dotnet\APiEcommerce\APiEcommerce\bin\Debug\net8.0\Microsoft.Extensions.Identity.Stores.dll
+D:\Dotnet\APiEcommerce\APiEcommerce\bin\Debug\net8.0\APiEcommerce.staticwebassets.runtime.json

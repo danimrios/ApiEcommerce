@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json.Serialization;
 using APiEcommerce.Constants;
+using APiEcommerce.Data;
 using APiEcommerce.Models;
 using APiEcommerce.Repository;
 using APiEcommerce.Repository.IRepository;
@@ -18,9 +19,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 var dbConnecionString = builder.Configuration.GetConnectionString("ConexionSql");
-builder.Services.AddDbContext<ApplicationDbContext>(Options => Options.UseSqlServer(dbConnecionString));
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+  options.UseSqlServer(dbConnecionString)
+  .UseSeeding((context, _) =>
+  {
+    var appContext = (ApplicationDbContext)context;
+    DataSeeder.SeedData(appContext);
+  })
+  );
 //maneja el tamaño de lo que se guarde en cache y tambien maneja si va a ser sencible a mayusculas y minusculas
-builder.Services.AddResponseCaching(options =>
+  builder.Services.AddResponseCaching(options =>
 {
     options.MaximumBodySize = 1024 * 1024;
     options.UseCaseSensitivePaths = true;
