@@ -6,12 +6,12 @@ namespace APiEcommerce.Repository.IRepository;
 
 public interface IUserRepository
 {
-    ICollection<User> GetUsers();
-    User? GetUser(int Id);
+    ICollection<ApplicationUser> GetUsers();
+    ApplicationUser? GetUser(string Id);
     bool IsUniqueUser(string nameUser);
     Task<UserLoginResponseDto> Login(UserLoginDto userLoginDto);
 
-    Task<User> Register(CreateUserDto createUserDto);
+    Task<UserDataDto> Register(CreateUserDto createUserDto);
 }
 // 1. Crear una interfaz llamada IUserRepository.
 //

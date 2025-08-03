@@ -1,6 +1,7 @@
 using APiEcommerce.Models;
 using APiEcommerce.Models.Dtos;
 using APiEcommerce.Repository.IRepository;
+using Asp.Versioning;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -8,9 +9,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace APiEcommerce.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
-    [Authorize(Roles ="Admin")]
+    [ApiVersionNeutral]
+    [Authorize(Roles = "Admin")]
     public class UsersController : ControllerBase
     {
         private readonly IUserRepository _UserRepository;
@@ -27,14 +29,14 @@ namespace APiEcommerce.Controllers
         {
             var Users = _UserRepository.GetUsers();
             var UserDto = _mapper.Map<List<UserDto>>(Users);
-            return Ok(User);
+            return Ok(UserDto);
         }
-        [HttpGet("{UserId:int}", Name = "GetUser")]
+        [HttpGet("{UserId}", Name = "GetUser")]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public IActionResult GetUser(int UserId)
+        public IActionResult GetUser(string UserId)
         {
             var User = _UserRepository.GetUser(UserId);
             if (User == null) return NotFound($"El Usuario con el Id {UserId} no existe");

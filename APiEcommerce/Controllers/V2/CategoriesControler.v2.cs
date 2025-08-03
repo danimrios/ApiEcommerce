@@ -1,6 +1,7 @@
 using APiEcommerce.Constants;
 using APiEcommerce.Models.Dtos;
 using APiEcommerce.Repository.IRepository;
+using Asp.Versioning;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -8,9 +9,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
-namespace APiEcommerce.Controllers
+namespace APiEcommerce.Controllers.v2
 {
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("2.0")]
     [ApiController]
     [Authorize(Roles ="Admin")]
     //este es el uso de las politicas de cors de controlador para poder estandarizar los nombre y eitar los errores de tipeo 
@@ -28,13 +30,17 @@ namespace APiEcommerce.Controllers
             _mapper = mapper;
 
         }
+        //[ResponseCache(Duration =10)] esta es una forma de setearlo
+        [ResponseCache(CacheProfileName ="Default10")]
+        //[ResponseCache(CacheProfileName =CacheProfiles.Default60)]
         [AllowAnonymous]//esto permite que el enpoint sea publico 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public IActionResult GetCategoies()
+        public IActionResult GetCategoiesOrderById()
         {
-            var cateories = _categoryRepository.GetCategories();
+            System.Console.WriteLine($"se realizo la solicitud");
+            var cateories = _categoryRepository.GetCategories().OrderBy(cat=> cat.Id);
             var categoriesDto = new List<CategoryDto>();
             foreach (var categoy in cateories)
             {

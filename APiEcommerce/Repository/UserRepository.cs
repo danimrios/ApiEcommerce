@@ -6,7 +6,9 @@ using APiEcommerce.Constants;
 using APiEcommerce.Models;
 using APiEcommerce.Models.Dtos;
 using APiEcommerce.Repository.IRepository;
+using AutoMapper;
 using BCrypt.Net;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -16,20 +18,27 @@ public class UserRepository : IUserRepository
 {
     public readonly ApplicationDbContext  _db;
     public string? _secretKey;
-    public UserRepository(ApplicationDbContext db, IConfiguration configuration)
+
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly IMapper _mapper;
+    public UserRepository(ApplicationDbContext db, IConfiguration configuration, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IMapper mapper)
     {
         _db = db;
         _secretKey = configuration.GetValue<String>(PolicyName.SecretKey);
-        
+        _userManager = userManager;
+        _roleManager = roleManager;
+        _mapper = mapper;
     }
-    public User? GetUser(int Id)
+    public ApplicationUser? GetUser(string Id)
     {
-        return _db.Users.FirstOrDefault(u => u.Id == Id);
+        return _db.ApplicationUser.FirstOrDefault(u => u.Id == Id);
     }
 
-    public ICollection<User> GetUsers()
+    public ICollection<ApplicationUser> GetUsers()
     {
-        return _db.Users.OrderBy(u=>u.Name).ToList();
+        return _db.ApplicationUser.OrderBy(u => u.UserName).ToList();
+     
     }
 
     public bool IsUniqueUser(string nameUser)
@@ -51,14 +60,15 @@ public class UserRepository : IUserRepository
             User = null,
             Message = "La contrasenia es requerido"
         };
-        var user = await _db.Users.FirstOrDefaultAsync<User>(u => u.Username.ToLower().Trim() == userLoginDto.Username.ToLower().Trim());
+        var user = await _db.ApplicationUser.FirstOrDefaultAsync<ApplicationUser>(u =>u.UserName!= null && u.UserName.ToLower().Trim() == userLoginDto.Username.ToLower().Trim());
         if (user == null) return new UserLoginResponseDto
         {
             Token = "",
             User = null,
             Message = "El username no fue encontrado"
         };
-        if (!BCrypt.Net.BCrypt.Verify(userLoginDto.Password, user.Password))
+        bool IsValid = await _userManager.CheckPasswordAsync(user, userLoginDto.Password);
+        if (!IsValid)
         {
             return new UserLoginResponseDto
             {
@@ -70,14 +80,15 @@ public class UserRepository : IUserRepository
         var handlerToken = new JwtSecurityTokenHandler();
         
         if (string.IsNullOrWhiteSpace(_secretKey)) throw new InvalidOperationException("SecretKey no esta configurado");
+        var role = await _userManager.GetRolesAsync(user);
         var key = Encoding.UTF8.GetBytes(_secretKey);
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(new[]
             {
                 new Claim("id",user.Id.ToString()),
-                new Claim("userName",user.Username),
-                new Claim(ClaimTypes.Role,user.Role?? string.Empty),
+                new Claim("userName",user.UserName?? string.Empty),
+                new Claim(ClaimTypes.Role,role.FirstOrDefault()?? string.Empty),
             }
             ),
             Expires = DateTime.UtcNow.AddHours(2),
@@ -87,19 +98,22 @@ public class UserRepository : IUserRepository
         return new UserLoginResponseDto()
             {
                 Token = handlerToken.WriteToken(token),
-                User = new UserRegisterDto()
-                {
-                    Username = user.Username,
-                    Name = user.Name?? "",
-                    Role = user.Role,
-                    Password= user.Password?? ""
-                },
-                Message = "Usuario ogeado correctamente"
+                User = _mapper.Map<UserDataDto >(user),
+                /*User = new UserRegisterDto()
+            {
+                Username = user.Username,
+                Name = user.Name?? "",
+                Role = user.Role,
+                Password= user.Password?? ""
+            },*/
+            Message = "Usuario ogeado correctamente"
             };;
     }
 
-    public async Task<User> Register(CreateUserDto createUserDto)
+    public async Task<UserDataDto> Register(CreateUserDto createUserDto)
     {
+
+        /*
         var encriptedPassword = BCrypt.Net.BCrypt.HashPassword(createUserDto.Password);
         var User = new User()
         {
@@ -112,7 +126,36 @@ public class UserRepository : IUserRepository
         _db.Users.Add(User);
         await _db.SaveChangesAsync();
         return User;
+*/
 
-    }
+        if (string.IsNullOrWhiteSpace(createUserDto.Username))
+        {
+            throw new ArgumentNullException("El Username es Requerido");
+        }
+        if (createUserDto.Password == null) throw new ArgumentNullException("El Password es Requerido");
+        var user = new ApplicationUser()
+        {
+            UserName = createUserDto.Username,
+            Email = createUserDto.Username,
+            NormalizedEmail = createUserDto.Username.ToUpper(),
+            Name = createUserDto.Name
+        };
+        var result = await _userManager.CreateAsync(user, createUserDto.Password);
+        if (result.Succeeded)
+        {
+            var userRole = createUserDto.Role ?? "User";
+            var roleExists = await _roleManager.RoleExistsAsync(userRole);
+            if (!roleExists)
+            {
+                var identityRole = new IdentityRole(userRole);
+                await _roleManager.CreateAsync(identityRole);
+            }
+            await _userManager.AddToRoleAsync(user, userRole);
+            var createUser = _db.ApplicationUser.FirstOrDefault(u => u.UserName == createUserDto.Username);
+            return _mapper.Map<UserDataDto>(createUser);
+        }
+        var error = string.Join(",", result.Errors.Select(e => e.Description));
+        throw new ApplicationException($"No se pudo realizar el Registro: {error}");
+        }
 
 }

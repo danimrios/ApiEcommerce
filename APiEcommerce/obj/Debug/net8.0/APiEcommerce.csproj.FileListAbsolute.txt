@@ -169,3 +169,14 @@ D:\Dotnet\APiEcommerce\APiEcommerce\obj\Debug\net8.0\ref\APiEcommerce.dll
 d:\Dotnet\APiEcommerce\APiEcommerce\bin\Debug\net8.0\AutoMapper.dll
 D:\Dotnet\APiEcommerce\APiEcommerce\bin\Debug\net8.0\BCrypt.Net-Next.dll
 D:\Dotnet\APiEcommerce\APiEcommerce\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+D:\Dotnet\APiEcommerce\APiEcommerce\obj\Debug\net8.0\APiEcommerce.sourcelink.json
+D:\Dotnet\APiEcommerce\APiEcommerce\bin\Debug\net8.0\api-ecom.postman_collection.json
+D:\Dotnet\APiEcommerce\APiEcommerce\bin\Debug\net8.0\Asp.Versioning.Abstractions.dll
+D:\Dotnet\APiEcommerce\APiEcommerce\bin\Debug\net8.0\Asp.Versioning.Http.dll
+D:\Dotnet\APiEcommerce\APiEcommerce\bin\Debug\net8.0\Asp.Versioning.Mvc.dll
+D:\Dotnet\APiEcommerce\APiEcommerce\bin\Debug\net8.0\Asp.Versioning.Mvc.ApiExplorer.dll
+D:\Dotnet\APiEcommerce\APiEcommerce\bin\Debug\net8.0\Microsoft.AspNetCore.Cryptography.Internal.dll
+D:\Dotnet\APiEcommerce\APiEcommerce\bin\Debug\net8.0\Microsoft.AspNetCore.Cryptography.KeyDerivation.dll
+D:\Dotnet\APiEcommerce\APiEcommerce\bin\Debug\net8.0\Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll
+D:\Dotnet\APiEcommerce\APiEcommerce\bin\Debug\net8.0\Microsoft.Extensions.Identity.Core.dll
+D:\Dotnet\APiEcommerce\APiEcommerce\bin\Debug\net8.0\Microsoft.Extensions.Identity.Stores.dll

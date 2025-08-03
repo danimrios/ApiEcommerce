@@ -1,6 +1,7 @@
 using APiEcommerce.Models;
 using APiEcommerce.Models.Dtos;
 using APiEcommerce.Repository.IRepository;
+using Asp.Versioning;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -8,7 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace APiEcommerce.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersionNeutral]
     [ApiController]
     // [Authorize]
     [Authorize(Roles ="Admin")]//esto define que role tiene que tener para acceder
@@ -106,7 +108,7 @@ namespace APiEcommerce.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status201Created)]
-        public IActionResult CreateProduct([FromBody] CreateProductDto createProductDto)
+        public IActionResult CreateProduct([FromForm] CreateProductDto createProductDto)
         {
             if (createProductDto == null) return BadRequest(ModelState);
 
@@ -122,6 +124,15 @@ namespace APiEcommerce.Controllers
             }
 
             var Product = _mapper.Map<Product>(createProductDto);
+            /// agregando imagen 
+            if (createProductDto.Image != null)
+            {
+                UploadProductImages(createProductDto, Product);
+            }
+            else
+            {
+                Product.ImgUrl = "https://placehold.co/300x300";
+            }
             if (!_productsRepository.CreateProduct(Product))
             {
                 ModelState.AddModelError("CustomError", $"Algo salio mal al guardar el regidtro {Product.Name}");
@@ -132,6 +143,20 @@ namespace APiEcommerce.Controllers
             return CreatedAtRoute("GetProduct", new { ProductId = Product.ProductId }, productDto);
         }
 
+        private void UploadProductImages(dynamic ProductDto, Product Product)
+        {
+            string fileNAme = Product.ProductId + Guid.NewGuid().ToString() + Path.GetExtension(ProductDto.Image.FileName);
+            var imegesFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "ProductsImages");
+            if (!Directory.Exists(imegesFolder)) Directory.CreateDirectory(imegesFolder);
+            var filePath = Path.Combine(imegesFolder, fileNAme);
+            FileInfo file = new FileInfo(filePath);
+            if (file.Exists) file.Delete();
+            using var fileStream = new FileStream(filePath, FileMode.Create);
+            ProductDto.Image.CopyTo(fileStream);
+            var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
+            Product.ImgUrl = $"{baseUrl}/productsImages/{fileNAme}";
+            Product.ImgUrlLocal = filePath;
+        }
 
         [HttpPut("{id:int}", Name = "UpdateProduct")]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -139,7 +164,7 @@ namespace APiEcommerce.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public IActionResult UpdateProduct(int id, [FromBody] CreateProductDto updateProductDto)
+        public IActionResult UpdateProduct(int id, [FromForm] CreateProductDto updateProductDto)
         {
             if (updateProductDto == null) return BadRequest(ModelState);
 
@@ -162,6 +187,16 @@ namespace APiEcommerce.Controllers
             }
             var Product = _mapper.Map<Product>(updateProductDto);
             Product.ProductId = id;
+
+        //update Imagen 
+            if (updateProductDto.Image != null)
+            {
+               UploadProductImages(updateProductDto, Product);
+            }
+            else
+            {
+                Product.ImgUrl = "https://placehold.co/300x300";
+            }
             if (!_productsRepository.UpdateProduct(Product))
             {
                 ModelState.AddModelError("CustomError", $"Algo salio mal al actualizar el regidtro {Product.Name}");
